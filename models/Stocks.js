@@ -5,10 +5,10 @@ const User = require('./User')
 
 const StockSchema = new mongoose.Schema({
     owner:{type: Schema.Types.ObjectId , ref: 'User'},
-    name: {type:String},
+    name: {type:String , lowercase: true},
     price: {type:Number},
     units: {type:Number},
-    sold: {type:Number},
+    sold: {type:Number , default: 0},
     history: {type: Array},
     timestamp: {type:String , default: ()=> moment().format('MMMM Do YYYY, h:mm:ss a')},
 })

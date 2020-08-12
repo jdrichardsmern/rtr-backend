@@ -3,7 +3,7 @@ const moment = require('moment')
 const bcrypt = require('bcryptjs')
 
 const UserSchema = new mongoose.Schema({
-    name:{type:String, default:""},
+    name:{type:String, default:"" , lowercase: true},
     email: {type:String , unique:  true , lowercase:true , required: true},
     password: {type:String , min: 6 , required:true},
     capital: {type: Number , default: 500000},
