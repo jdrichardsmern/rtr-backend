@@ -1,5 +1,15 @@
-const Stock = require('./models/Stocks')
 
+const mongoose = require('mongoose');
+const Stock = require('./models/Stocks')
+require('dotenv').config()
+mongoose
+.connect(process.env.MONGODB_URI , {
+    useNewUrlParser : true,
+    useUnifiedTopology: true,
+    useCreateIndex: true,
+})
+.then(() => {console.log('mongodb connected')})
+.catch(()=> {console.log('server err')});
 
 const stocks = [
     { 
@@ -54,26 +64,17 @@ const stocks = [
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-const seed = async (data) => {
-    
+const seed = (data) => {
     data.map((data) => {
         const {name, price , units, sold} = data
     const stock = new Stock({owner:'5f32be18ac71851554c85e5d' , name,price,units,sold })
+    stock.history.push({
+        time: Date.now(),
+        price: price
+    })
     console.log(stock)
     stock.save()
     .then((data) => console.log(data))
     })
 }
-
 seed(stocks)

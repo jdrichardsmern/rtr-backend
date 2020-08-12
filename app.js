@@ -2,8 +2,6 @@ const express = require('express');
 const cookieParser = require('cookie-parser');
 const mongoose = require('mongoose');
 const logger = require('morgan');
-const indexRouter = require('./routes/index');
-const usersRouter = require('./routes/users');
 const app = express();
 const session = require('express-session');
 let MongoStore = require('connect-mongo')(session)
@@ -12,6 +10,12 @@ require('dotenv').config()
 require('./lib/passport');
 const log = console.log
 const PORT = process.env.PORT || 8080
+
+
+
+const indexRouter = require('./routes/index');
+const usersRouter = require('./routes/users');
+const stockRouter = require('./routes/stocks')
 
 
 
@@ -48,6 +52,7 @@ app.use(cookieParser());
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
+app.use('/stock' , stockRouter)
 app.listen(PORT , () => {
   log(`listening to ${PORT}`)
 })

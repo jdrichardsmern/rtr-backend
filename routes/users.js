@@ -2,12 +2,16 @@ const express = require('express');
 const router = express.Router();
 const User = require('../models/User')
 const Profolio = require('../models/Portfolio')
-const passport = require('passport')
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 const verifyToken = require('./middleware/verifyToken');
 const Portfolio = require('../models/Portfolio');
 /* GET users listing. */
+
+
+
+
+
 router.get('/', function(req, res, next) {
   res.send('respond with a resource');
 });
