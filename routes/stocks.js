@@ -83,16 +83,18 @@ router.post('/create' , verifyToken ,async (req,res,next) => {
     catch(err){
         return res.status(500).json({errors: err})
     }
+})
 
 
-router.put('/buy/:name' , async (req,res,next) => {
-    const {price , units , email , order} = req.body
-    const name = req.params.name
+router.put('/buy/:id' , async (req,res,next) => {
+    const {email , order} = req.body
+    const id = req.params.id
     try {
         let user = await User.findOne({email})
         let portfolio = await Portfolio.findOne({owner: user._id})
         if(user){
-            let stock = await Stock.findOne({name})
+            let stock = await Stock.findById(id)
+            
             if(order > (stock.units - stock.sold)){
                 return res.status(500).json({errors: `Your Request for ${order} exeeded the amount ${(stock.units - stock.sold)}`})
             }
@@ -109,63 +111,121 @@ router.put('/buy/:name' , async (req,res,next) => {
                 time: Date.now(),
                 price: stock.price
             })
-            ///////////////////////
+            
+            /////////////////////
             stock.save().then((stock) => {
                 user.capital -= (order * oldStockPrice)
                 user.save().then(() => {
-                   let exist = portfolio.stocks.filer((singleStock) => {
-                        return singleStock.name === stock.name
+                   let exist = portfolio.stocks.filter((singleStock) => {
+                        return singleStock.name === stock.name ? 1 : 0
                     })
-                    if (exist){
-                        portfolio.stocks.map((searchStock) => {
+                    console.log(exist)
+                    if (exist.length > 0){
+                        portfolio.stocks.forEach((searchStock) => {
                             if (searchStock.name === stock.name){
                                 searchStock.units += order
+                            
                             }
                         })
                     }else {
-                        portfolio.stock.push({name: stock.name , units: order})
+                        portfolio.stocks.push({name: stock.name , units: order})
                     }
-                    portfolio.save()
-                    .then(async ()=> {
+                    portfolio.update()
+                    .then(async(portfolio)=> {
+                        console.log(portfolio)
                         try{
                             let sellerportfolio = await Portfolio.findOne({owner: stock.owner})
-                            sellerportfolio.stocks.map((findingStock) => {
+                            sellerportfolio.stocks.forEach((findingStock) => {
                                 if(findingStock.name === stock.name){
                                     findingStock.units -= order
                                 }
                             })
-                            sellerportfolio.save()
-                            return res.json(200).json({message : 'Your order has been successful'})
+                            sellerportfolio.update()
+                            console.log(sellerportfolio)
+                            return res.status(200).json({message : 'Your order has been successful'})
                         }
                         catch(err){
-                            return res.status(500).json({errors : err})
+                            return res.status(500).json({errors :"1", err})
                         }
                     })
                     .catch((err) => {
-                        return res.status(500).json({errors : err})
+                        return res.status(500).json({errors :"2", err})
                     })
                 }).catch((err) => {
-                    return res.status(500).json({errors : err})
+                    return res.status(500).json({errors :"3", err})
                 })
-                
-
+    
             })
             .catch((err) => {
-                return res.status(500).json({errors : err})
+                return res.status(500).json({errors :"4", err})
             })
         }
     }
 
     catch(err){
+
         return res.status(500).json({errors: 'Ops Somthing Went Wrong ...Catch Error ' ,err})
     }
 })
  
 
+router.post('/sell/:id' , async(req,res,next) => {
+    const {email , sell} = req.body
+    const id = req.params.id
+    try {
+        let user = await User.findOne({email})
+        let portfolio = await Portfolio.findById(user._id)
+        let stock = await Stock.findById(id)
+        
+        let exist = portfolio.stocks.filter((searchStock) => {
+            return searchStock.name === stock.name ? 1 : 0
+        })
+         if(exist.length < 1){
+             return res.status(500).json({errors : 'You do not own any of this stock'})
+         }
+         if(exist.length > 0){
+            if (exist[0].units < sell){
+                return res.status(500).json({errors : 'You are selling more than you have'})
+            } 
+            portfolio.stocks.forEach((findStock) => {
+                if(findStock.name === stock.name){
+                    findStock.unit -= sell
+                    if(findStock.units === 0){
+                        // havent found a solution
+                    }
+                }
+            })
+            let buyerPortfolio = await Portfolio.findOne({owner : stock.owner})
+            buyerPortfolio.stocks.forEach((searchStock) => {
+                if (searchStock.name === stock.name){
+                    searchStock.units += sell
+                }
+            })
+            user.capital += sell * stock.price
+            stock.sold -= sell
+            ///////////////////// this is where i set new price
 
-
-
+            //////////////
+            stock.history.push({
+                time: Date.now(),
+                price: stock.price
+            })
+            user.save()
+            portfolio.save()
+            sellerportfolio.save()
+            stock.save()
+            return res.status(200).json({message : `You sold ${sell} of ${stock.name} for ${sell*stock.price}`})
+         }
+    }
+    catch(err){
+        return res.status(500).json({errors : err})
+    }
 })
+
+
+
+
+
 
 
 
