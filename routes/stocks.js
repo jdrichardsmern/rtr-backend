@@ -85,47 +85,81 @@ router.post('/create' , verifyToken ,async (req,res,next) => {
     }
 
 
-// router.put('/buy/:name' , async (req,res,next) => {
-//     const {price , units , email , order} = req.body
-//     const name = req.params.name
-//     try {
-//         let user = await User.findOne({email})
-//         let portfolio = await Portfolio.findOne({owner = user._id})
-//         if(user){
-//             let stock = await Stock.findOne({name})
-//             if(order > (stock.units - stock.sold)){
-//                 return res.status(500).json({errors: `Your Request for ${order} exeeded the amount ${(stock.units - stock.sold)}`})
-//             }
-//             if(user.captial < (order * stock.price)){
-//                 return res.status(500).json({errors: `Insufficent Capital ${(order * stock.price)}`})
-//             }
-//             if(stock.owner === user._id){
-//                 return res.status(500).status({errors: 'You Own This Stock'})
-//             }
-//             const oldStockPrice = stock.price
-//             ///////////////////// 
-//             stock.sold += order
-//             stock.history.push({
-//                 time: Date.now(),
-//                 price: stock.price
-//             })
-//             ///////////////////////
-//             stock.save().then((stock) => {
-//                 user.capital -= (order * oldStockPrice)
+router.put('/buy/:name' , async (req,res,next) => {
+    const {price , units , email , order} = req.body
+    const name = req.params.name
+    try {
+        let user = await User.findOne({email})
+        let portfolio = await Portfolio.findOne({owner: user._id})
+        if(user){
+            let stock = await Stock.findOne({name})
+            if(order > (stock.units - stock.sold)){
+                return res.status(500).json({errors: `Your Request for ${order} exeeded the amount ${(stock.units - stock.sold)}`})
+            }
+            if(user.captial < (order * stock.price)){
+                return res.status(500).json({errors: `Insufficent Capital ${(order * stock.price)}`})
+            }
+            if(stock.owner === user._id){
+                return res.status(500).status({errors: 'You Own This Stock'})
+            }
+            const oldStockPrice = stock.price
+            ///////////////////// 
+            stock.sold += order
+            stock.history.push({
+                time: Date.now(),
+                price: stock.price
+            })
+            ///////////////////////
+            stock.save().then((stock) => {
+                user.capital -= (order * oldStockPrice)
+                user.save().then(() => {
+                   let exist = portfolio.stocks.filer((singleStock) => {
+                        return singleStock.name === stock.name
+                    })
+                    if (exist){
+                        portfolio.stocks.map((searchStock) => {
+                            if (searchStock.name === stock.name){
+                                searchStock.units += order
+                            }
+                        })
+                    }else {
+                        portfolio.stock.push({name: stock.name , units: order})
+                    }
+                    portfolio.save()
+                    .then(async ()=> {
+                        try{
+                            let sellerportfolio = await Portfolio.findOne({owner: stock.owner})
+                            sellerportfolio.stocks.map((findingStock) => {
+                                if(findingStock.name === stock.name){
+                                    findingStock.units -= order
+                                }
+                            })
+                            sellerportfolio.save()
+                            return res.json(200).json({message : 'Your order has been successful'})
+                        }
+                        catch(err){
+                            return res.status(500).json({errors : err})
+                        }
+                    })
+                    .catch((err) => {
+                        return res.status(500).json({errors : err})
+                    })
+                }).catch((err) => {
+                    return res.status(500).json({errors : err})
+                })
                 
-                
 
-//             })
-//             .catch((err) => {
+            })
+            .catch((err) => {
+                return res.status(500).json({errors : err})
+            })
+        }
+    }
 
-//             })
-//         }
-//     }
-
-//     catch(err){
-//         return res.status(500).json({errors: 'Ops Somthing Went Wrong ...Catch Error ' ,err})
-//     }
-// })
+    catch(err){
+        return res.status(500).json({errors: 'Ops Somthing Went Wrong ...Catch Error ' ,err})
+    }
+})
  
 
 
