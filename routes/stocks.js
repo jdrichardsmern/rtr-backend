@@ -115,42 +115,65 @@ router.put('/buy/:id' , async (req,res,next) => {
             /////////////////////
             stock.save().then((stock) => {
                 user.capital -= (order * oldStockPrice)
-                user.save().then(() => {
-                   let exist = portfolio.stocks.filter((singleStock) => {
-                        return singleStock.name === stock.name ? 1 : 0
-                    })
-                    console.log(exist)
-                    if (exist.length > 0){
-                        portfolio.stocks.forEach((searchStock) => {
-                            if (searchStock.name === stock.name){
-                                searchStock.units += order
+                user.save().then(async () => {
+                   let exist = await portfolio.stocks.findIndex((searchStock) => {
+                       return searchStock.name === stock.name
+                   })
+                    
+                    if (exist){
+                
+                        let number  = await portfolio.stocks[exist].units + order
+
+
+                        Portfolio.updateOne({'owner': user._id, 'stocks.name' : stock.name},
+                        {'$set': {
+                               'stocks.$.units': number,
+                         }},
+                            function(err,model) {
+                             if(err){
+                              console.log(err);
+                          }
+                          return model;
+                   });
+
+
+                    //    let gg =await Portfolio.update({'owner' : user._id, 'stocks.name' : stock.name}, { $set: { 'myArray.$.units': number } }, (err, x) => {
+                    //         console.log(x)
+                    //         console.log(err)
+                    //    })
+                         
+                         
+                         
+                        //  forEach((searchStock) => {
+                        //     if (searchStock.name === stock.name){
+                        //         searchStock.units += order
                             
-                            }
-                        })
+                        //     }
+                        // })
                     }else {
                         portfolio.stocks.push({name: stock.name , units: order})
                     }
-                    portfolio.update()
-                    .then(async(portfolio)=> {
-                        console.log(portfolio)
-                        try{
-                            let sellerportfolio = await Portfolio.findOne({owner: stock.owner})
-                            sellerportfolio.stocks.forEach((findingStock) => {
-                                if(findingStock.name === stock.name){
-                                    findingStock.units -= order
-                                }
-                            })
-                            sellerportfolio.update()
-                            console.log(sellerportfolio)
-                            return res.status(200).json({message : 'Your order has been successful'})
-                        }
-                        catch(err){
-                            return res.status(500).json({errors :"1", err})
-                        }
-                    })
-                    .catch((err) => {
-                        return res.status(500).json({errors :"2", err})
-                    })
+                    // portfolio.save()
+                    // .then(async(portfolio)=> {
+                    //     console.log(portfolio)
+                    //     try{
+                    //         let sellerportfolio = await Portfolio.findOne({owner: stock.owner})
+                    //         sellerportfolio.stocks.forEach((findingStock) => {
+                    //             if(findingStock.name === stock.name){
+                    //                 findingStock.units -= order
+                    //             }
+                    //         })
+                    //         sellerportfolio.save()
+                    //         console.log(sellerportfolio)
+                    //         return res.status(200).json({message : 'Your order has been successful'})
+                    //     }
+                    //     catch(err){
+                    //         return res.status(500).json({errors :"1", err})
+                    //     }
+                    // })
+                    // .catch((err) => {
+                    //     return res.status(500).json({errors :"2", err})
+                    // })
                 }).catch((err) => {
                     return res.status(500).json({errors :"3", err})
                 })
@@ -177,14 +200,18 @@ router.post('/sell/:id' , async(req,res,next) => {
         let portfolio = await Portfolio.findById(user._id)
         let stock = await Stock.findById(id)
         
-        let exist = portfolio.stocks.filter((searchStock) => {
-            return searchStock.name === stock.name ? 1 : 0
+        // let exist = portfolio.stocks.filter((searchStock) => {
+        //     return searchStock.name === stock.name ? 1 : 0
+        // })
+        let exist = await portfolio.stocks.findIndex((searchStock) => {
+            return searchStock.name === stock.name
         })
-         if(exist.length < 1){
+
+         if(!exist){
              return res.status(500).json({errors : 'You do not own any of this stock'})
          }
-         if(exist.length > 0){
-            if (exist[0].units < sell){
+         if(exist){
+            if (portfolio.stocks[exist].units < sell){
                 return res.status(500).json({errors : 'You are selling more than you have'})
             } 
             portfolio.stocks.forEach((findStock) => {
@@ -195,6 +222,7 @@ router.post('/sell/:id' , async(req,res,next) => {
                     }
                 }
             })
+
             let buyerPortfolio = await Portfolio.findOne({owner : stock.owner})
             buyerPortfolio.stocks.forEach((searchStock) => {
                 if (searchStock.name === stock.name){
