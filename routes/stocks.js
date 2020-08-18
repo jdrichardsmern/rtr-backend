@@ -86,24 +86,28 @@ router.post('/create' , verifyToken ,async (req,res,next) => {
 })
 
 
-router.put('/buy/:id' , async (req,res,next) => {
+router.put('/buy/:id' , verifyToken,  async (req,res,next) => {
     const {email , order} = req.body
     const id = req.params.id
     try {
         let user = await User.findOne({email})
         let portfolio = await Portfolio.findOne({owner: user._id})
         if(user){
-            let stock = await Stock.findById(id)
             
+            let stock = await Stock.findById(id)
+            let owner = `${stock.owner}` === `${user._id}` 
+            if(owner){
+                return res.status(500).json({errors : 'You Own This Stock'})
+            }
             if(order > (stock.units - stock.sold)){
+                console.log(1)
                 return res.status(500).json({errors: `Your Request for ${order} exeeded the amount ${(stock.units - stock.sold)}`})
             }
             if(user.captial < (order * stock.price)){
                 return res.status(500).json({errors: `Insufficent Capital ${(order * stock.price)}`})
             }
-            if(stock.owner === user._id){
-                return res.status(500).status({errors: 'You Own This Stock'})
-            }
+
+
             const oldStockPrice = stock.price
             ///////////////////// 
             stock.sold += order
@@ -121,7 +125,7 @@ router.put('/buy/:id' , async (req,res,next) => {
                        return searchStock.name === stock.name
                    })
                     
-                    if (exist){
+                    if (exist > -1){
                 
                         let number  = await portfolio.stocks[exist].units + order
                         Portfolio.updateOne({'owner': user._id, 'stocks.name' : stock.name},
@@ -161,14 +165,7 @@ router.put('/buy/:id' , async (req,res,next) => {
                        })
 
 
-                            // let sellerportfolio = await Portfolio.findOne({owner: stock.owner})
-                            // sellerportfolio.stocks.forEach((findingStock) => {
-                            //     if(findingStock.name === stock.name){
-                            //         findingStock.units -= order
-                            //     }
-                            // })
-                            // sellerportfolio.save()
-                            // console.log(sellerportfolio)
+    
                             return res.status(200).json({message : 'Your order has been successful'})
                         }
                         catch(err){
@@ -184,7 +181,7 @@ router.put('/buy/:id' , async (req,res,next) => {
     
             })
             .catch((err) => {
-                return res.status(500).json({errors :"4", err})
+                return res.status(500).json({errors :`Your Request for ${order} exeeded the amount ${(stock.units - stock.sold)}`, err})
             })
         }
     }
@@ -207,21 +204,25 @@ router.put('/sell/:id' , async(req,res,next) => {
         // let exist = portfolio.stocks.filter((searchStock) => {
         //     return searchStock.name === stock.name ? 1 : 0
         // })
-
-        let exist = portfolio.stocks.findIndex((searchStock) => {
+        let owner = `${stock.owner}` === `${user._id}` 
+        if(owner){
+            return res.status(500).json({errors : 'You Own This Stock'})
+        }
+        
+        let exist = await portfolio.stocks.findIndex((searchStock) => {
+            
             return searchStock.name === stock.name
         })
-
-  
-     
-         if(!exist){
+        
+        
+        
+         if(exist === -1){
+             
              return res.status(500).json({errors : 'You do not own any of this stock'})
          }
-         if(exist){
-            
-        
-        
-            if (portfolio.stocks[exist].units < sell){
+         if(exist > -1){
+             console.log(portfolio.stocks[exist].units)
+            if (portfolio.stocks[exist].units < sell || portfolio.stocks[exist].units === 0 ){
                 return res.status(500).json({errors : 'You are selling more than you have'})
             } 
             let number = await portfolio.stocks[exist].units - sell
@@ -263,11 +264,7 @@ router.put('/sell/:id' , async(req,res,next) => {
               return model;
        })
            console.log(1)
-            // buyerPortfolio.stocks.forEach((searchStock) => {
-            //     if (searchStock.name === stock.name){
-            //         searchStock.units += sell
-            //     }
-            // })
+
             user.capital += sell * stock.price
             stock.sold -= sell
             let oldPrice = stock.price
@@ -289,7 +286,7 @@ router.put('/sell/:id' , async(req,res,next) => {
          }
     }
     catch(err){
-        return res.status(500).json({errors : err})
+        return res.status(500).json({errors : 'catch error',err})
     }
 })
 
