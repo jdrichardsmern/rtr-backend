@@ -6,7 +6,7 @@ const Stock = require('../models/Stocks')
 const User  = require('../models/User')
 const Portfolio = require('../models/Portfolio')
 const {priceAjust , priceAjustsell} = require('./middleware/stockPriceAjustment')
-
+const bcrypt = require('bcryptjs')
 router.get('/all' , async (req,res,next) => {
 
 
@@ -87,16 +87,23 @@ router.post('/create' , verifyToken ,async (req,res,next) => {
 })
 
 
-router.put('/buy/:id' , verifyToken,  async (req,res,next) => {
-    const {email , order} = req.body
+router.put('/buy/:id' ,   async (req,res,next) => {
+    const {email , order ,password} = req.body
     const id = req.params.id
     try {
+         
         let user = await User.findOne({email})
+      
         let portfolio = await Portfolio.findOne({owner: user._id})
+        
         if(user){
-            
+            const match = await bcrypt.compare(password, user.password)
+            if(!match){
+                return res.status(500).json({errors : 'Invalid Password'})
+              }
+
             let stock = await Stock.findById(id)
-            let owner = `${stock.owner}` === `${user._id}` 
+            let owner = `${stock.owner}` === `${user._id}`
             if(owner){
                 return res.status(500).json({errors : 'You Own This Stock'})
             }
@@ -188,24 +195,30 @@ router.put('/buy/:id' , verifyToken,  async (req,res,next) => {
     }
 
     catch(err){
-
         return res.status(500).json({errors: 'Ops Somthing Went Wrong ...Catch Error ' ,err})
     }
 })
  
 
-router.put('/sell/:id' , async(req,res,next) => {
-    const {email , sell} = req.body
+router.put('/sell/:id' , verifyToken, async(req,res,next) => {
+    const {email , sell , password} = req.body
     const id = req.params.id
     try {
         let user = await User.findOne({email})
         let portfolio = await Portfolio.findOne({owner: user._id})
         let stock = await Stock.findById(id)
-        
+        const match = await bcrypt.compare(password, user.password)
+        if(!match){
+            return res.status(500).json({errors : 'Invalid Password'})
+          }
         // let exist = portfolio.stocks.filter((searchStock) => {
         //     return searchStock.name === stock.name ? 1 : 0
         // })
+        console.log(req.body)
         let owner = `${stock.owner}` === `${user._id}` 
+        if(typeof sell !== 'number'){
+            return res.json({errors : 'sell must be a number'})
+        }
         if(owner){
             return res.status(500).json({errors : 'You Own This Stock'})
         }
@@ -222,7 +235,6 @@ router.put('/sell/:id' , async(req,res,next) => {
              return res.status(500).json({errors : 'You do not own any of this stock'})
          }
          if(exist > -1){
-             console.log(portfolio.stocks[exist].units)
             if (portfolio.stocks[exist].units < sell || portfolio.stocks[exist].units === 0 ){
                 return res.status(500).json({errors : 'You are selling more than you have'})
             } 
@@ -264,7 +276,7 @@ router.put('/sell/:id' , async(req,res,next) => {
               }
               return model;
        })
-           console.log(1)
+         
 
             user.capital += sell * stock.price
             stock.sold -= sell
@@ -277,12 +289,11 @@ router.put('/sell/:id' , async(req,res,next) => {
                 time: Date.now(),
                 price: stock.price
             })
-            console.log(2)
+          
             user.save()
             portfolio.save()
             buyerPortfolio.save()
             stock.save()
-            console.log(3)
             return res.status(200).json({message : `You sold ${sell} of ${stock.name} for ${sell*oldPrice}`})
          }
     }

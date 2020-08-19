@@ -102,9 +102,23 @@ router.put('/update', verifyToken, async(req,res,next) => {
    catch(err){
     console.log(err)
   }
+})
 
 
-  
+router.post('/user' , async (req,res,next) => {
+
+  try{
+    const {email , password} = req.body
+    let user = await User.findOne({email})
+    const match = await bcrypt.compare(password, user.password)
+    if (match){
+      console.log('ff')
+      return res.status(200).json({user})
+    }
+  }
+  catch(err){
+    return res.json({err})
+  }
 })
 
 

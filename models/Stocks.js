@@ -8,7 +8,7 @@ const StockSchema = new mongoose.Schema({
     name: {type:String , lowercase: true},
     price: {type:Number},
     units: {type:Number},
-    sold: {type:Number , default: 0},
+    sold: {type:Number},
     history: {type: Array},
     timestamp: {type:String , default: ()=> moment().format('MMMM Do YYYY, h:mm:ss a')},
 })
