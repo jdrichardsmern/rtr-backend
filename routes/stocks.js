@@ -60,6 +60,7 @@ router.post('/create' , verifyToken ,async (req,res,next) => {
                 .then((portfolio) => {
                     console.log(portfolio)
                     portfolio.stocks.push({
+                        id: newStock._id,
                         name,
                         units,
                     })
@@ -141,7 +142,7 @@ router.put('/buy/:id' , verifyToken,  async (req,res,next) => {
 
 
                     }else {
-                        portfolio.stocks.push({name: stock.name , units: order})
+                        portfolio.stocks.push({id: stock._id ,name: stock.name , units: order})
                     }
                     portfolio.save()
                     .then(async(portfolio)=> {

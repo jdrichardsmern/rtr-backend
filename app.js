@@ -16,6 +16,7 @@ const PORT = process.env.PORT || 8080
 const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/users');
 const stockRouter = require('./routes/stocks')
+const portfolioRouter = require('./routes/porfolio')
 
 
 
@@ -53,6 +54,7 @@ app.use(cookieParser());
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/stock' , stockRouter)
+app.use('/portfolio' , portfolioRouter)
 app.listen(PORT , () => {
   log(`listening to ${PORT}`)
 })

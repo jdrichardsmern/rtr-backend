@@ -65,31 +65,49 @@ catch(error){
 })
 
 
-router.get('/test', verifyToken , (req,res,next) => {
-  return res.status(200).json({message: 'u are verified'})
+router.put('/update', verifyToken, async(req,res,next) => {
+  console.log(req.body)
+  const {name , email, userEmail, password ,  nPassword , retypeNPassword} = req.body
+  
+
+  try {
+    let user = await User.findOne({email: userEmail})
+    const newEmail = await User.findOne({email})
+    const match = await bcrypt.compare(password, user.password)
+
+    if(newEmail){
+      return res.status(500).json({errors : 'Email Already Registered'})
+    }
+
+    if(!match){
+      return res.status(500).json({errors : 'Invalid Password'})
+    }
+    if(nPassword !== retypeNPassword){
+      return res.status(500).json({errors : 'New Password Need to Match'})
+
+    }
+
+    user.name = name ? name : user.name
+    user.email = email ? email : user.email
+    if(password && nPassword && retypeNPassword){
+      if(nPassword.length < 6){
+        return res.status(500).json({errors : 'New Password Must be 6 Character Long'})
+      }
+        user.password = nPassword
+    }
+    await user.save()
+    return res.status(200).json({message : 'Account Updated' , user})
+  }
+
+   catch(err){
+    console.log(err)
+  }
+
+
+  
 })
 
 
-
-// router.post('/login', (req,res,next) => {
-//   if (req.body.email === '' || req.body.password ==="") {
-//     return res.status(500).json({errors: 'fill out field'})
-//   }
-//   passport.authenticate('local-login', function (error , user , info) {
-//     if (error){
-//       console.log(error)
-//       return res.status(401).json(error)
-//     }
-//     // req.login(user , function (error){
-//     //   if(error){
-//     //     return res.status(500).json({message: error || 'Oops something went wrong'})
-//     //   }
-//     // })
-//     user.isAuthenticated = true
-//     return res.json( user)
-//   })(req,res,next)
-
-// })
 
 
 module.exports = router;
