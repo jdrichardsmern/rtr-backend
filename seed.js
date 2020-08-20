@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const Stock = require('./models/Stocks')
 const User = require('./models/User')
 const Portfolio = require('./models/Portfolio')
+const History = require('./models/History')
 require('dotenv').config()
 mongoose
 .connect(process.env.MONGODB_URI , {
@@ -69,7 +70,7 @@ const stocks = [
 const seed = (data) => {
     data.map((data) => {
         const {name, price , units, sold} = data
-    const stock = new Stock({owner:'5f32be18ac71851554c85e5d' , name,price,units,sold:0 })
+    const stock = new Stock({owner:'5f3ec8d5b4c6f12b240b0521' , name,price,units,sold:0 })
     stock.history.push({
         time: Date.now(),
         price: price
@@ -78,12 +79,14 @@ const seed = (data) => {
     console.log(stock)
     stock.save()
     .then((data) => {
-        Portfolio.findOne({owner : '5f32be18ac71851554c85e5d'}).then((port) => {
+        Portfolio.findOne({owner : '5f3ec8d5b4c6f12b240b0521'}).then((port) => {
             port.stocks.push({
                 id: data.id,
                 name:data.name,
                 units:data.units
             })
+            let history = new History({message: `David} Created ${stock.name}`})
+            history.save()
             port.save()
         })
     })
