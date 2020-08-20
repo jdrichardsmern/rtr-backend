@@ -19,4 +19,4 @@ const priceAjust = (price , stockUnit, units) => {
          return ajustedPrice.toFixed(2)  
         }
         
-    module.exports = {priceAjust,priceAjustsell}
+    module.exports = {priceAjust, priceAjustsell}

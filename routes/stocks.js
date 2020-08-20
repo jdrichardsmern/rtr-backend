@@ -7,6 +7,9 @@ const User  = require('../models/User')
 const Portfolio = require('../models/Portfolio')
 const {priceAjust , priceAjustsell} = require('./middleware/stockPriceAjustment')
 const bcrypt = require('bcryptjs')
+const {validateBuy , validateCreate , validateSell } = require('./middleware/validation')
+
+
 router.get('/all' , async (req,res,next) => {
 
 
@@ -36,7 +39,7 @@ router.get('/stock/:id' ,  async (req,res,next)=> {
 })
 
 
-router.post('/create' , verifyToken ,async (req,res,next) => {
+router.post('/create' , verifyToken , validateCreate ,async (req,res,next) => {
     const {name, price , units , email , password} = req.body
     try {
         const exist = await Stock.findOne({name})
@@ -92,7 +95,7 @@ router.post('/create' , verifyToken ,async (req,res,next) => {
 })
 
 
-router.put('/buy/:id' ,   async (req,res,next) => {
+router.put('/buy/:id' , verifyToken, validateBuy ,  async (req,res,next) => {
     const {email , order ,password} = req.body
     const id = req.params.id
     console.log(req.body)
@@ -206,7 +209,7 @@ router.put('/buy/:id' ,   async (req,res,next) => {
 })
  
 
-router.put('/sell/:id' , verifyToken, async(req,res,next) => {
+router.put('/sell/:id' , verifyToken, validateSell , async(req,res,next) => {
     const {email , sell , password} = req.body
     const id = req.params.id
     try {
@@ -217,9 +220,7 @@ router.put('/sell/:id' , verifyToken, async(req,res,next) => {
         if(!match){
             return res.status(500).json({errors : 'Invalid Password'})
           }
-        // let exist = portfolio.stocks.filter((searchStock) => {
-        //     return searchStock.name === stock.name ? 1 : 0
-        // })
+
         console.log(req.body)
         let owner = `${stock.owner}` === `${user._id}` 
         if(typeof sell !== 'number'){
@@ -256,15 +257,6 @@ router.put('/sell/:id' , verifyToken, async(req,res,next) => {
               return model;
        })
 
-            // portfolio.stocks.forEach((findStock) => {
-            //     if(findStock.name === stock.name){
-            //         findStock.unit -= sell
-            //         if(findStock.units === 0){
-            //             // havent found a solution
-            //         }
-            //     }
-            // })
-            
             let buyerPortfolio = await Portfolio.findOne({owner : stock.owner})
             let idx = await buyerPortfolio.stocks.findIndex((searchStock) => {
                 return searchStock.name === stock.name
@@ -287,7 +279,6 @@ router.put('/sell/:id' , verifyToken, async(req,res,next) => {
             user.capital += sell * stock.price
             stock.sold -= sell
             let oldPrice = stock.price
-            // stock.price = priceAjust(stock.price , stock.units , sell)
             ///////////////////// this is where i set new price
             stock.price = priceAjustsell(stock.price , stock.units,sell)
             //////////////

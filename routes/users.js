@@ -5,6 +5,7 @@ const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 const verifyToken = require('./middleware/verifyToken');
 const Portfolio = require('../models/Portfolio');
+const {validateLogin ,validateSignup} = require('./middleware/validation')
 /* GET users listing. */
 
 
@@ -19,7 +20,7 @@ router.get('/', function(req, res, next) {
 
 
 
-router.post('/signup', async (req,res,next) => {
+router.post('/signup',validateSignup, async (req,res,next) => {
   try {
     const {name,email ,password} = req.body
     let user = await User.findOne({email})
@@ -41,7 +42,7 @@ router.post('/signup', async (req,res,next) => {
 })
 
 
-router.post('/login',  async (req,res,next) => {
+router.post('/login', validateLogin, async (req,res,next) => {
 
 try {
   const {email,password} = await req.body
