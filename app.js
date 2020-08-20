@@ -10,7 +10,7 @@ require('./lib/passport');
 const log = console.log;
 const PORT = process.env.PORT || 8080;
 const http = require('http');
-const socketIo = require('socket.io');
+// const socketIo = require('socket.io');
 const History = require('./models/History');
 
 const index = require('./routes/index');
@@ -58,31 +58,31 @@ app.use('/portfolio', portfolioRouter);
 
 const server = http.createServer(app);
 
-const io = socketIo(server);
+// const io = socketIo(server);
 
-io.on('connection', (socket) => {
-  let history;
-  console.log('New client connected');
-  setInterval(async () => {
-    let newHistory = await History.find();
-    if (history) {
-      if (newHistory.length > history.length) {
-        history = newHistory;
-        return getApiAndEmit(socket);
-      }
-      return;
-    }
-    if (!history) {
-      history = newHistory;
-      getApiAndEmit(socket);
-    }
-    //   console.log(!history)
-    // getApiAndEmit(socket)
-  }, 1000);
-  socket.on('disconnect', () => {
-    console.log('Client disconnected');
-  });
-});
+// io.on('connection', (socket) => {
+//   let history;
+//   console.log('New client connected');
+//   setInterval(async () => {
+//     let newHistory = await History.find();
+//     if (history) {
+//       if (newHistory.length > history.length) {
+//         history = newHistory;
+//         return getApiAndEmit(socket);
+//       }
+//       return;
+//     }
+//     if (!history) {
+//       history = newHistory;
+//       getApiAndEmit(socket);
+//     }
+//     //   console.log(!history)
+//     // getApiAndEmit(socket)
+//   }, 1000);
+//   socket.on('disconnect', () => {
+//     console.log('Client disconnected');
+//   });
+// });
 
 const getApiAndEmit = (socket) => {
   History.find().then((data) => {
@@ -94,12 +94,12 @@ const getApiAndEmit = (socket) => {
 };
 const port = 4001;
 
-server.listen(process.env.PORT, () =>
-  console.log(`Listening on port ${process.env.PORT}`)
-);
+// server.listen(process.env.PORT, () =>
+//   console.log(`Listening on port ${process.env.PORT}`)
+// );
 
-app.listen(PORT, () => {
-  log(`listening to ${PORT}`);
-});
+// app.listen(PORT, () => {
+//   log(`listening to ${PORT}`);
+// });
 
 module.exports = app;
