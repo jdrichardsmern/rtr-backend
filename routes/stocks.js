@@ -185,7 +185,8 @@ router.put('/buy/:id' , verifyToken, validateBuy ,  async (req,res,next) => {
                        })
 
 
-    
+                       let history = new History({message: `${user.email} Bought ${order}Units of ${stock.name}`})
+                       history.save()
                             return res.status(200).json({message : 'Your order has been successful'})
                         }
                         catch(err){
@@ -294,6 +295,8 @@ router.put('/sell/:id' , verifyToken, validateSell , async(req,res,next) => {
             portfolio.save()
             buyerPortfolio.save()
             stock.save()
+            let history = new History({message: `${user.email} Sold ${sell}Units of ${stock.name}`})
+            history.save()
             return res.status(200).json({message : `You sold ${sell} of ${stock.name} for ${sell*oldPrice}`})
          }
     }
