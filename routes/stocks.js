@@ -8,7 +8,7 @@ const Portfolio = require('../models/Portfolio')
 const {priceAjust , priceAjustsell} = require('./middleware/stockPriceAjustment')
 const bcrypt = require('bcryptjs')
 const {validateBuy , validateCreate , validateSell } = require('./middleware/validation')
-
+const History = require('../models/History')
 
 router.get('/all' , async (req,res,next) => {
 
@@ -39,7 +39,7 @@ router.get('/stock/:id' ,  async (req,res,next)=> {
 })
 
 
-router.post('/create' , verifyToken , validateCreate ,async (req,res,next) => {
+router.post('/create'  , validateCreate ,async (req,res,next) => {
     const {name, price , units , email , password} = req.body
     try {
         const exist = await Stock.findOne({name})
@@ -48,12 +48,13 @@ router.post('/create' , verifyToken , validateCreate ,async (req,res,next) => {
         }
         let user = await User.findOne({email})
         if (user){
-
-            const match = await bcrypt.compare(password, user.password)
-            if(!match){
-                return res.status(500).json({errors : 'Invalid Password'})
-              }
-            
+            console.log(req.body)
+            // const match = await bcrypt.compare(password, user.password)
+            // console.log(req.body)
+            // if(!match){
+            //     return res.status(500).json({errors : 'Invalid Password'})
+            //   }
+              console.log(req.body)
             if (price * units > user.capital){
                 return res.status(200).json({errors : 'Insufficent Funds'})
             }
@@ -75,6 +76,8 @@ router.post('/create' , verifyToken , validateCreate ,async (req,res,next) => {
                     user.capital -= price * units
                     user.save()
                     portfolio.save()
+                    let history = new History({message: `${user.email} created ${newStock.name}`})
+                    history.save()
                     Stock.find().then((stocks) => { return res.status(200).json({message: 'Stock Created' , stocks}) })
                 })
                 .catch((err) => {
