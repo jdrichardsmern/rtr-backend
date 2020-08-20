@@ -7,8 +7,8 @@ var router = express.Router();
 // });
 
 router.get('/', (req, res) => {
-  res.redirect('/users/login');
-  // res.send({ response: "I am alive" }).status(200);
+  // res.redirect('/users/signup');
+  res.send({ response: 'I am alive' }).status(200);
 });
 
 module.exports = router;
