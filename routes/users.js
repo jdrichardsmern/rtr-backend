@@ -5,7 +5,7 @@ const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 const verifyToken = require('./middleware/verifyToken');
 const Portfolio = require('../models/Portfolio');
-const {validateLogin ,validateSignup} = require('./middleware/validation')
+const {validateLogin ,validateSignup , validateUpdate} = require('./middleware/validation')
 /* GET users listing. */
 
 
@@ -66,11 +66,9 @@ catch(error){
 })
 
 
-router.put('/update', verifyToken, async(req,res,next) => {
-  console.log(req.body)
+router.put('/update', verifyToken, validateUpdate,  async(req,res,next) => {
   const {name , email, userEmail, password ,  nPassword , retypeNPassword} = req.body
   
-
   try {
     let user = await User.findOne({email: userEmail})
     const newEmail = await User.findOne({email})
@@ -83,17 +81,11 @@ router.put('/update', verifyToken, async(req,res,next) => {
     if(!match){
       return res.status(500).json({errors : 'Invalid Password'})
     }
-    if(nPassword !== retypeNPassword){
-      return res.status(500).json({errors : 'New Password Need to Match'})
 
-    }
 
     user.name = name ? name : user.name
     user.email = email ? email : user.email
     if(password && nPassword && retypeNPassword){
-      if(nPassword.length < 6){
-        return res.status(500).json({errors : 'New Password Must be 6 Character Long'})
-      }
         user.password = nPassword
     }
     await user.save()

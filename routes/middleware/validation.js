@@ -52,5 +52,21 @@ module.exports = {
             return res.status(500).json({errors : 'All field must be filled'})
         }
         next()
+    },
+    validateUpdate: () => {
+        const {name , email, userEmail, nPassword , retypeNPassword} = req.body
+        
+        if(email){
+            if(!email.includes('@') || !email.includes('.') ){
+                return res.status(500).json({errors : 'Use a valid Email'})
+            }
+        }
+        if(nPassword !== retypeNPassword){
+            return res.status(500).json({errors : 'New Password Need to Match'})
+          }
+          if(nPassword.length < 6){
+            return res.status(500).json({errors : 'New Password Must be 6 Character Long'})
+          }
+         next()
     }
 }
