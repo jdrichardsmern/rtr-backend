@@ -112,7 +112,6 @@ router.post('/user' , async (req,res,next) => {
     let user = await User.findOne({email})
     const match = await bcrypt.compare(password, user.password)
     if (match){
-      console.log('ff')
       return res.status(200).json({user})
     }
   }

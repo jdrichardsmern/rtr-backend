@@ -37,7 +37,7 @@ router.get('/stock/:id' ,  async (req,res,next)=> {
 
 
 router.post('/create' , verifyToken ,async (req,res,next) => {
-    const {name, price , units , email} = req.body
+    const {name, price , units , email , password} = req.body
     try {
         const exist = await Stock.findOne({name})
         if (exist){
@@ -45,6 +45,11 @@ router.post('/create' , verifyToken ,async (req,res,next) => {
         }
         let user = await User.findOne({email})
         if (user){
+
+            const match = await bcrypt.compare(password, user.password)
+            if(!match){
+                return res.status(500).json({errors : 'Invalid Password'})
+              }
             
             if (price * units > user.capital){
                 return res.status(200).json({errors : 'Insufficent Funds'})
@@ -67,7 +72,7 @@ router.post('/create' , verifyToken ,async (req,res,next) => {
                     user.capital -= price * units
                     user.save()
                     portfolio.save()
-                    return res.status(200).json({success: 'Stock Created' , stock})
+                    Stock.find().then((stocks) => { return res.status(200).json({message: 'Stock Created' , stocks}) })
                 })
                 .catch((err) => {
                     return res.status(500).json({errors: 'Portfolio Error' ,err})
@@ -90,6 +95,7 @@ router.post('/create' , verifyToken ,async (req,res,next) => {
 router.put('/buy/:id' ,   async (req,res,next) => {
     const {email , order ,password} = req.body
     const id = req.params.id
+    console.log(req.body)
     try {
          
         let user = await User.findOne({email})
