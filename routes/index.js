@@ -6,10 +6,9 @@ var router = express.Router();
 //   res.render('index', { title: 'Express' });
 // });
 
-
-router.get("/", (req, res) => {
-  res.send({ response: "I am alive" }).status(200);
+router.get('/', (req, res) => {
+  res.redirect('/stock/all');
+  // res.send({ response: "I am alive" }).status(200);
 });
-
 
 module.exports = router;
