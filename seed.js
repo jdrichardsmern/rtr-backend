@@ -84,18 +84,27 @@ const seed = (data) => {
     });
 
     console.log(stock);
-    stock.save().then((data) => {
-      Portfolio.findOne({ owner: '5f3edc5f96de920017a90d7b' }).then((port) => {
-        port.stocks.push({
-          id: data.id,
-          name: data.name,
-          units: data.units
-        });
-        let history = new History({ message: `David} Created ${stock.name}` });
-        history.save();
-        port.save();
+    stock
+      .save()
+      .then((data) => {
+        Portfolio.findOne({ owner: '5f3edc5f96de920017a90d7b' }).then(
+          (port) => {
+            port.stocks.push({
+              id: data.id,
+              name: data.name,
+              units: data.units
+            });
+            let history = new History({
+              message: `David} Created ${stock.name}`
+            });
+            history.save();
+            port.save();
+          }
+        );
+      })
+      .then(() => {
+        mongoose.disconnect();
       });
-    });
   });
 };
 seed(stocks);

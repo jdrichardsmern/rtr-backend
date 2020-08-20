@@ -7,7 +7,7 @@ var router = express.Router();
 // });
 
 router.get('/', (req, res) => {
-  res.redirect('/stock/all');
+  res.redirect('/users/login');
   // res.send({ response: "I am alive" }).status(200);
 });
 
