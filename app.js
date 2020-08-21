@@ -3,6 +3,7 @@ const cookieParser = require('cookie-parser');
 const mongoose = require('mongoose');
 const logger = require('morgan');
 const app = express();
+const cors = require('cors');
 const session = require('express-session');
 let MongoStore = require('connect-mongo')(session);
 require('dotenv').config();
@@ -44,7 +45,7 @@ mongoose
 
 // app.use(passport.initialize());
 // app.use(passport.session());
-
+app.use(cors());
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -56,7 +57,7 @@ app.use('/users', usersRouter);
 app.use('/stock', stockRouter);
 app.use('/portfolio', portfolioRouter);
 
-const server = http.createServer(app);
+// const server = http.createServer(app);
 
 // const io = socketIo(server);
 
@@ -84,15 +85,15 @@ const server = http.createServer(app);
 //   });
 // });
 
-const getApiAndEmit = (socket) => {
-  History.find().then((data) => {
-    socket.emit('data', data);
-  });
-  const response = new Date();
-  // Emitting a new message. Will be consumed by the client
-  // socket.emit("FromAPI", response);
-};
-const port = 4001;
+// const getApiAndEmit = (socket) => {
+//   History.find().then((data) => {
+//     socket.emit('data', data);
+//   });
+const response = new Date();
+// Emitting a new message. Will be consumed by the client
+// socket.emit("FromAPI", response);
+// };
+// const port = 4001;
 
 // server.listen(process.env.PORT, () =>
 //   console.log(`Listening on port ${process.env.PORT}`)
